@@ -7,17 +7,21 @@ export class Chapter extends Component {
 
   private hoverEl: HTMLElement;
 
+  realEl: HTMLElement;
+
   constructor(
     container: HTMLElement | DocumentFragment,
+    duration: number,
     public start: number,
     public end: number,
     public title?: string,
   ) {
     super(container, '.ppbar_chapter_i');
-    const wrapEl = this.el.appendChild($('.ppbar_chapter_i_w'));
+    const wrapEl = this.realEl = this.el.appendChild($('.ppbar_chapter_i_w'));
     this.bufferedEl = wrapEl.appendChild($('.ppbar_chapter_i_b'));
     this.hoverEl = wrapEl.appendChild($('.ppbar_chapter_i_h'));
     this.playedEl = wrapEl.appendChild($('.ppbar_chapter_i_p'));
+    this.updateFlex(duration);
   }
 
   get duration() {
@@ -30,6 +34,10 @@ export class Chapter extends Component {
       match ? ((time - this.start) / this.duration) : time > this.end ? 1 : 0
     })`;
     return match;
+  }
+
+  updateFlex(duration: number) {
+    this.el.style.flex = String(Math.max(0, this.duration / duration));
   }
 
   match(time: number) {

@@ -2,7 +2,9 @@
   position: relative;
   width: 100%;
   touch-action: none;
+  color: #fff;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 
   &:hover &_chapter_i_w {
     transform: scaleY(1.8);
@@ -20,6 +22,14 @@
     transform: translateY(-1px);
   }
 
+  &:hover &_heat-hover {
+    opacity: 1;
+  }
+
+  &:hover &_marker-hover {
+    opacity: 1;
+  }
+
   &_chapter {
     display: flex;
     position: relative;
@@ -28,6 +38,7 @@
 
     &_i {
       padding: 6px 0;
+      flex: 1;
 
       &_w {
         position: relative;
@@ -59,13 +70,15 @@
         background: red;
       }
     }
-
-    &_i:hover &_i_w {
-      transform: scaleY(2.5);
-    }
   }
 
   &_marker {
+    transition: opacity .12s ease;
+
+    &-hover {
+      opacity: 0;
+    }
+
     &_i {
       position: absolute;
       bottom: 100%;
@@ -84,7 +97,32 @@
         transform-origin: 0 0;
         pointer-events: none;
       }
+
+      &_tip {
+        position: absolute;
+        bottom: 100%;
+        font-size: 12px;
+        border-radius: 2px;
+        margin-bottom: 10px;
+        padding: 3px 6px;
+        white-space: nowrap;
+        background: rgba(0, 0, 0, .7);
+        pointer-events: none;
+        opacity: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: opacity .2s ease;
+      }
+
+      &:hover {
+        z-index: 1;
+      }
+
+      &:hover &_tip {
+        opacity: 1;
+      }
     }
+
   }
 
   &_heat {
@@ -95,7 +133,11 @@
     display: flex;
     gap: 2px;
     height: 40px;
-    transition: transform .12s ease;
+    transition: transform .2s ease, opacity .12s ease;
+
+    &-hover {
+      opacity: 0;
+    }
 
     &_i {
       flex: 1;
@@ -113,7 +155,7 @@
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
-    transition: opacity .2s ease;
+    transition: opacity .2s ease, transform .2s ease;
     transform-origin: 0 0;
 
     > :first-child {
@@ -154,12 +196,13 @@
     &_img {
       border: 1px solid #fff;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 5px;
+      margin-bottom: 2px;
       background-color: rgba(255, 255, 255, .3);
       background-repeat: no-repeat;
     }
 
     &_title {
+      min-height: 17px;
       word-break: break-all;
     }
   }

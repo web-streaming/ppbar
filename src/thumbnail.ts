@@ -13,7 +13,7 @@ export class Thumbnail extends Component {
     row: 5,
     width: 160,
     height: 90,
-    images: ['https://nplayer.js.org/assets/images/M1-cce8ec398d0d5cd02d47cb8655f16125.jpg'],
+    images: [],
   };
 
   private imgEl: HTMLElement;
@@ -36,11 +36,11 @@ export class Thumbnail extends Component {
     container: HTMLElement,
     private prog: ProgressBar,
   ) {
-    super(container, '.prog_thumb');
+    super(container, '.ppbar_thumb');
 
-    this.imgEl = this.el.appendChild($('.prog_thumb_img'));
-    this.titleEl = this.el.appendChild($('.prog_thumb_title'));
-    this.timeEl = this.el.appendChild($('.prog_thumb_time'));
+    this.imgEl = this.el.appendChild($('.ppbar_thumb_img'));
+    this.titleEl = this.el.appendChild($('.ppbar_thumb_title'));
+    this.timeEl = this.el.appendChild($('.ppbar_thumb_time'));
     this.rect = addDestroyable(this, new Rect(this.el));
 
     this.updateOptions();
@@ -75,7 +75,9 @@ export class Thumbnail extends Component {
     } else {
       this.rect.update();
     }
-    this.timeEl.textContent = formatTime(time);
+
+    const live = this.prog.live;
+    this.timeEl.textContent = `${live ? '-' : ''}${formatTime(live ? this.prog.duration - time : time)}`;
 
     let title;
     if (this.markers) {
@@ -97,7 +99,7 @@ export class Thumbnail extends Component {
       }
     }
 
-    if (title) this.titleEl.textContent = title;
+    this.titleEl.textContent = title || '';
     const half = this.rect.width / 2;
     this.el.style.left = `${clamp(x - half, 0, Math.max(0, maxX - 2 * half))}px`;
   }

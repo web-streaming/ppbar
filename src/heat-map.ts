@@ -11,7 +11,7 @@ export class HeatMap extends Component {
     max: number,
     flex?: string,
   ) {
-    super(container, '.prog_heat_i');
+    super(container, '.ppbar_heat_i');
 
     const d = this.update(dots, max);
 

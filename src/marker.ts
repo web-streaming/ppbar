@@ -1,17 +1,22 @@
-import { Component, $ } from 'wblib';
+import { Component, $, addDestroyableListener } from 'wblib';
 import { ProgressConfig } from './config';
+import { EVENT } from './constants';
+import { ProgressBar } from './progress-bar';
 
 export class Marker extends Component {
   time: number;
 
-  constructor(container: HTMLElement, cfg: Required<ProgressConfig>['markers'][0], duration: number) {
-    super(container, '.prog_marker_i');
+  private tipEl: HTMLElement;
 
+  constructor(prog: ProgressBar, container: HTMLElement, private cfg: Required<ProgressConfig>['markers'][0]) {
+    super(container, '.ppbar_marker_i');
+
+    this.tipEl = this.el.appendChild($('.ppbar_marker_i_tip'));
     if (cfg.title) {
-      // new Tooltip(this.el, cfg.title);
+      this.tipEl.textContent = cfg.title;
     }
 
-    this.el.appendChild($('.prog_marker_i_d'));
+    this.el.appendChild($('.ppbar_marker_i_d'));
 
     if (cfg.image) {
       const img = new Image(cfg.size?.[0], cfg.size?.[1]);
@@ -25,13 +30,21 @@ export class Marker extends Component {
       this.el.appendChild(cfg.el);
     }
 
+    addDestroyableListener(this, this.el, 'click', () => {
+      prog.emit(EVENT.MARKER_CLICK, this.cfg);
+    });
+
     this.time = cfg.time;
-    this.update(duration);
+    this.update(prog.duration);
   }
 
   update(duration: number) {
     if (duration) {
-      this.el.style.left = `${this.time / duration * 100}%`;
+      if (this.time < 0) {
+        this.el.style.right = `${-this.time / duration * 100}%`;
+      } else {
+        this.el.style.left = `${this.time / duration * 100}%`;
+      }
     }
   }
 }

@@ -1,13 +1,16 @@
 import {
-  Component, $, addDestroyable, addDestroyableListener, Rect, throttle, Drag, isNumber, isValidNumber,
+  $, addDestroyable, addDestroyableListener, Rect, throttle, Drag, isNumber, isValidNumber, clamp, addClass, isString,
+  EventEmitterComponent,
 } from 'wblib';
 import { Chapter } from './chapter';
 import { getConfig, ProgressConfig } from './config';
+import { EVENT } from './constants';
 import { HeatMap } from './heat-map';
 import { Marker } from './marker';
 import { Thumbnail } from './thumbnail';
+import { ProgressEventType } from './types';
 
-export class ProgressBar extends Component {
+export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   config: ProgressConfig;
 
   rect: Rect;
@@ -24,7 +27,11 @@ export class ProgressBar extends Component {
 
   thumbnail: Thumbnail;
 
-  private dotActive = false;
+  private curChapter = 0;
+
+  private prevActiveHeat?: HTMLElement;
+
+  private prevActiveChapter?: HTMLElement;
 
   private dragging = false;
 
@@ -39,18 +46,34 @@ export class ProgressBar extends Component {
   constructor(container?: HTMLElement | DocumentFragment, config?: ProgressConfig) {
     super(container, '.ppbar');
     this.config = getConfig(config);
-    this.updateDuration(this.config.duration);
-    this.updateLive(this.config.live);
+    const {
+      duration, live, dot, heatMap,
+    } = this.config;
+    this.updateDuration(duration);
+    this.updateLive(live);
 
     this.heatEl = this.el.appendChild($('.ppbar_heat'));
     this.chapterEl = this.el.appendChild($('.ppbar_chapter'));
     this.markerEl = this.el.appendChild($('.ppbar_marker'));
     this.dotEl = this.el.appendChild($('.ppbar_dot'));
-    this.dotEl.appendChild($('.ppbar_dot_i'));
+    if (dot) {
+      if (isString(dot)) {
+        this.dotEl.innerHTML = dot;
+      } else {
+        this.dotEl.appendChild(dot);
+      }
+    } else {
+      this.dotEl.appendChild($('.ppbar_dot_i'));
+    }
+    if (heatMap?.hoverShow) addClass(this.heatEl, 'ppbar_heat-hover');
 
     this.rect = addDestroyable(this, new Rect(this.el));
-    addDestroyable(this, new Drag(this.el, this.onDragStart, this.onDragging, this.onDragEnd));
+    addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
+      this.dragging = false;
+      this.emit(EVENT.DRAGEND, this.getCurrentTime(ev.clientX - this.rect.x));
+    }));
     addDestroyableListener(this, this.el, 'mousemove', throttle((ev: MouseEvent) => this.onMousemove(ev)), true);
+    addDestroyableListener(this, this.el, 'mouseleave', throttle(this.onMouseleave), false);
 
     this.setChapters();
     this.setMarkers();
@@ -58,6 +81,14 @@ export class ProgressBar extends Component {
 
     this.thumbnail = addDestroyable(this, new Thumbnail(this.el, this));
     this.thumbnail.updateOptions();
+
+    if (this.live) {
+      this.updatePlayed(this.duration);
+    }
+  }
+
+  updateSize() {
+    this.rect.update();
   }
 
   updateLive(l?: boolean) {
@@ -67,34 +98,97 @@ export class ProgressBar extends Component {
   updateDuration(duration?: number) {
     this.duration = duration || 0;
     if (!isValidNumber(this.duration)) this.duration = 0;
-    this.live = this.config.live!;
   }
 
-  updatePlayed() {
+  updatePlayed(time: number, isDrag?: boolean) {
+    if (this.dragging && !isDrag) return;
+    this.chapters.forEach((c, i) => {
+      if (c.updatePlayed(time)) this.curChapter = i;
+    });
+
+    this.dotEl.style.left = `${time / this.duration * 100}%`;
+  }
+
+  updateBuffer(time: number) {
+    this.chapters.forEach((c) => c.updateBuffer(time));
+  }
+
+  updateHover(time: number, left?: number) {
+    let matched = false;
+    const gt1 = this.chapters.length > 1;
+    this.chapters.forEach((c, i) => {
+      if (c.updateHover(time) && gt1) {
+        const h = this.headMaps[i];
+        if (h) {
+          if (this.prevActiveHeat) this.prevActiveHeat.style.transform = '';
+          h.el.style.transform = 'translateY(-1.5px)';
+          this.prevActiveHeat = h.el;
+        }
+        if (this.prevActiveChapter) this.prevActiveChapter.style.transform = '';
+        c.realEl.style.transform = 'scaleY(2.8)';
+        this.prevActiveChapter = c.realEl;
+        if (this.curChapter === i) {
+          this.dotEl.style.transform = 'scale(1.2) translateY(-50%)';
+          matched = true;
+        }
+      }
+    });
+    if (gt1 && !matched) this.dotEl.style.transform = 'translateY(-50%)';
+    if (left == null) left = time / this.duration * this.rect.width;
+    this.thumbnail.update(time, left, this.rect.width);
+  }
+
+  updateChapters(chapters?: ProgressConfig['chapters']) {
+    const cLen = this.chapters.length;
+    if (!chapters && cLen < 2) return;
+    const duration = this.duration;
+    if (chapters && chapters.length) {
+      const maxLen = Math.max(chapters.length, cLen);
+      let prev = 0;
+      let old;
+      let cur;
+      for (let i = 0; i < maxLen; i++) {
+        old = this.chapters[i];
+        cur = chapters[i];
+        if (old && cur) {
+          old.start = prev;
+          old.end = cur.time || duration;
+          old.updateFlex(duration);
+        } else if (old) {
+          old.destroy();
+          this.chapters[i] = undefined as any;
+        } else {
+          this.chapters[i] = new Chapter(this.chapterEl, duration, prev, cur.time || duration, cur.title);
+        }
+        if (cur) prev = cur.time || duration;
+      }
+    } else {
+      const c = this.chapters[0];
+      c.start = 0;
+      c.end = duration;
+      c.updateFlex(duration);
+      for (let i = 1; i < cLen; i++) {
+        this.chapters[i].destroy();
+        this.chapters[i] = undefined as any;
+      }
+    }
+
+    this.chapters = this.chapters.filter(Boolean);
+  }
+
+  updateMarkers(markers: ProgressConfig['markers']) {
 
   }
 
-  updateBuffer() {
+  updateHeatMap(heatMap: ProgressConfig['heatMap']) {
 
   }
 
-  updateHover() {
+  updateThumbnail(thumb: ProgressConfig['thumbnail']) {
 
   }
 
-  updateChapters() {
-
-  }
-
-  updateMarkers() {
-
-  }
-
-  updateHeatMap() {
-
-  }
-
-  updateThumbnail() {
+  updateMarkerPosition(relativeTime: number) {
 
   }
 
@@ -109,15 +203,13 @@ export class ProgressBar extends Component {
 
       let prev = 0;
       chapters.forEach((c, i) => {
-        const len = (c.time || duration) - prev;
-        this.chapters[i] = new Chapter(frag, prev, c.time || duration, c.title);
-        this.chapters[i].el.style.flex = String(Math.max(0, len / duration));
+        this.chapters[i] = new Chapter(frag, duration, prev, c.time || duration, c.title);
         prev = c.time || 0;
       });
 
       this.chapterEl.appendChild(frag);
     } else {
-      this.chapters[0] = new Chapter(this.chapterEl, 0, duration);
+      this.chapters[0] = new Chapter(this.chapterEl, duration, 0, duration);
     }
   }
 
@@ -125,7 +217,7 @@ export class ProgressBar extends Component {
     const makers = this.config.markers;
     if (makers && makers.length && this.duration) {
       makers.forEach((m, i) => {
-        this.markers[i] = new Marker(this.markerEl, m, this.duration);
+        this.markers[i] = new Marker(this, this.markerEl, m);
       });
     }
   }
@@ -196,11 +288,42 @@ export class ProgressBar extends Component {
     });
   }
 
-  private onMousemove(ev: MouseEvent) {}
+  private onMousemove(ev: MouseEvent) {
+    const l = ev.clientX - this.rect.x;
+    const t = this.getCurrentTime(l);
+    this.updateHover(t, l);
+    this.emit(EVENT.MOUSEMOVE, t);
+  }
 
-  private onDragStart = (ev: MouseEvent) => {};
+  private onMouseleave = () => {
+    this.emit(EVENT.MOUSELEAVE);
+    setTimeout(() => {
+      if (this.prevActiveChapter) {
+        this.prevActiveChapter.style.transform = '';
+        this.prevActiveChapter = undefined;
+      }
+      if (this.prevActiveHeat) {
+        this.prevActiveHeat.style.transform = '';
+        this.prevActiveHeat = undefined;
+      }
+    });
+  };
 
-  private onDragging = (ev: MouseEvent) => {};
+  private onDragStart = (ev: MouseEvent) => {
+    this.dragging = true;
+    this.rect.update();
+    this.onDragging(ev);
+  };
 
-  private onDragEnd = (ev: MouseEvent) => {};
+  private onDragging = (ev: MouseEvent) => {
+    const l = ev.clientX - this.rect.x;
+    const t = this.getCurrentTime(l);
+    this.updatePlayed(t, true);
+    this.updateHover(t, l);
+    this.emit(EVENT.DRAGGING, t);
+  };
+
+  private getCurrentTime(left: number): number {
+    return clamp((left / this.rect.width)) * this.duration;
+  }
 }

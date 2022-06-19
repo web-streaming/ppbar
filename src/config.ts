@@ -1,10 +1,12 @@
 export interface ProgressConfig {
   live?: boolean;
   duration?: number;
+  dot?: HTMLElement | string;
   chapters?: { time?: number, title: string }[];
   heatMap?: {
     points: (number | { duration?: number; score: number })[];
     defaultDuration?: number;
+    hoverShow?: boolean;
   };
   markers?: {
     time: number,
