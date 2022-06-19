@@ -1,0 +1,6 @@
+dist
+lib
+scripts
+__tests__
+*.js
+*.d.ts

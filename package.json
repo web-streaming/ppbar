@@ -1,0 +1,43 @@
+{
+  "name": "ppbar",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "sideEffects": false,
+  "authors": "wopen <nepow@foxmail.com>",
+  "repository": "git@github.com:web-streaming/ppbar.git",
+  "homepage": "https://github.com/web-streaming/ppbar",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "lib"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite demo",
+    "build": "vite build",
+    "release": "node ./scripts/release.js",
+    "lint": "eslint src/**/*.ts --fix"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "enquirer": "^2.3.6",
+    "eslint": "^8.18.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "execa": "^5.1.0",
+    "sass": "^1.52.3",
+    "semver": "^7.3.7",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4",
+    "vite": "^2.9.12"
+  },
+  "dependencies": {
+    "wblib": "^1.0.2"
+  }
+}
