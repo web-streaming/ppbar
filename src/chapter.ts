@@ -9,6 +9,8 @@ export class Chapter extends Component {
 
   realEl: HTMLElement;
 
+  duration = 0;
+
   constructor(
     container: HTMLElement | DocumentFragment,
     duration: number,
@@ -21,19 +23,14 @@ export class Chapter extends Component {
     this.bufferedEl = wrapEl.appendChild($('.ppbar_chapter_i_b'));
     this.hoverEl = wrapEl.appendChild($('.ppbar_chapter_i_h'));
     this.playedEl = wrapEl.appendChild($('.ppbar_chapter_i_p'));
+    this.update(start, end, duration);
+  }
+
+  update(start: number, end: number, duration: number) {
+    this.start = start;
+    this.end = end;
+    this.duration = end - start;
     this.updateFlex(duration);
-  }
-
-  get duration() {
-    return this.end - this.start;
-  }
-
-  private setBar(time: number, dom: HTMLElement) {
-    const match = this.match(time);
-    dom.style.transform = `scaleX(${
-      match ? ((time - this.start) / this.duration) : time > this.end ? 1 : 0
-    })`;
-    return match;
   }
 
   updateFlex(duration: number) {
@@ -54,5 +51,13 @@ export class Chapter extends Component {
 
   updatePlayed(time: number) {
     return this.setBar(time, this.playedEl);
+  }
+
+  private setBar(time: number, dom: HTMLElement) {
+    const match = this.match(time);
+    dom.style.transform = `scaleX(${
+      match ? ((time - this.start) / this.duration) : time > this.end ? 1 : 0
+    })`;
+    return match;
   }
 }

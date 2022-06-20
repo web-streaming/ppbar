@@ -1,18 +1,21 @@
 import { Component, $, addDestroyableListener } from 'wblib';
-import { ProgressConfig } from './config';
 import { EVENT } from './constants';
 import { ProgressBar } from './progress-bar';
+import { RequiredConfig } from './types';
 
 export class Marker extends Component {
   time: number;
 
+  title?: string;
+
   private tipEl: HTMLElement;
 
-  constructor(prog: ProgressBar, container: HTMLElement, private cfg: Required<ProgressConfig>['markers'][0]) {
+  constructor(prog: ProgressBar, container: HTMLElement, private cfg: RequiredConfig['markers'][0]) {
     super(container, '.ppbar_marker_i');
 
     this.tipEl = this.el.appendChild($('.ppbar_marker_i_tip'));
     if (cfg.title) {
+      this.title = cfg.title;
       this.tipEl.textContent = cfg.title;
     }
 

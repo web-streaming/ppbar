@@ -1,12 +1,11 @@
 import {
   Component, formatTime, clamp, Rect, $, addDestroyable,
 } from 'wblib';
-import { Chapter } from './chapter';
-import { ProgressConfig } from './config';
 import { ProgressBar } from './progress-bar';
+import { ProgressConfig, RequiredConfig } from './types';
 
 export class Thumbnail extends Component {
-  private opts: Required<Required<ProgressConfig>['thumbnail']> = {
+  private opts: Required<RequiredConfig['thumbnail']> = {
     start: 0,
     gap: 10,
     col: 5,
@@ -28,10 +27,6 @@ export class Thumbnail extends Component {
 
   private ssGapRatio?: number;
 
-  private chapters?: Chapter[];
-
-  private markers?: ProgressConfig['markers'];
-
   constructor(
     container: HTMLElement,
     private prog: ProgressBar,
@@ -43,12 +38,11 @@ export class Thumbnail extends Component {
     this.timeEl = this.el.appendChild($('.ppbar_thumb_time'));
     this.rect = addDestroyable(this, new Rect(this.el));
 
-    this.updateOptions();
+    this.updateOptions(this.prog.config.thumbnail);
   }
 
-  updateOptions() {
-    const cfg = this.prog.config;
-    const opts = Object.assign(this.opts, cfg?.thumbnail);
+  updateOptions(cfg: ProgressConfig['thumbnail']) {
+    const opts = Object.assign(this.opts, cfg);
 
     if (opts.images.length) {
       this.imgEl.style.display = 'block';
@@ -59,10 +53,7 @@ export class Thumbnail extends Component {
     } else {
       this.imgEl.style.display = 'none';
     }
-    const chapters = this.prog.chapters;
-    const markers = cfg?.markers;
-    if (chapters && chapters.length) this.chapters = chapters;
-    if (markers && markers.length) this.markers = markers;
+    this.rect.update();
   }
 
   update(time: number, x: number, maxX: number) {
@@ -79,19 +70,20 @@ export class Thumbnail extends Component {
     const live = this.prog.live;
     this.timeEl.textContent = `${live ? '-' : ''}${formatTime(live ? this.prog.duration - time : time)}`;
 
+    const { markers, chapters } = this.prog;
     let title;
-    if (this.markers) {
-      for (let i = 0, l = this.markers.length, item; i < l; i++) {
-        item = this.markers[i];
+    if (markers.length) {
+      for (let i = 0, l = markers.length, item; i < l; i++) {
+        item = markers[i];
         if (time >= item.time && time < (item.time + 2)) {
           title = item.title;
           break;
         }
       }
     }
-    if (!title && this.chapters) {
-      for (let i = 0, l = this.chapters.length, item; i < l; i++) {
-        item = this.chapters[i];
+    if (!title && chapters.length) {
+      for (let i = 0, l = chapters.length, item; i < l; i++) {
+        item = chapters[i];
         if (time >= item.start && time <= item.end) {
           title = item.title;
           break;

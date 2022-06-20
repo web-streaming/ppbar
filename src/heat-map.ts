@@ -1,4 +1,6 @@
-import { Component, svgNS } from 'wblib';
+import {
+  Component, svgNS,
+} from 'wblib';
 
 let heatId = 0;
 
@@ -7,13 +9,11 @@ export class HeatMap extends Component {
 
   constructor(
     container: HTMLElement,
-    dots: number[][],
-    max: number,
+    dots?: number[][],
+    max?: number,
     flex?: string,
   ) {
     super(container, '.ppbar_heat_i');
-
-    const d = this.update(dots, max);
 
     const svg = document.createElementNS(svgNS, 'svg');
     this.pathEl = document.createElementNS(svgNS, 'path');
@@ -26,7 +26,6 @@ export class HeatMap extends Component {
     svg.setAttribute('preserveAspectRatio', 'none');
     svg.setAttribute('width', '100%');
     clipPath.setAttribute('id', `ppb${heatId}`);
-    this.pathEl.setAttributeNS(null, 'd', d);
     rect.setAttribute('clip-path', `url(#ppb${heatId})`);
     rect.setAttribute('fill', 'white');
     rect.setAttribute('fill-opacity', '0.2');
@@ -42,12 +41,14 @@ export class HeatMap extends Component {
 
     heatId++;
 
-    if (flex) this.el.style.flex = flex;
+    if (dots && max) {
+      this.update(dots, max, flex);
+    }
 
     this.el.appendChild(svg);
   }
 
-  update(dots: number[][], max: number) {
+  update(dots: number[][], max: number, flex?: string) {
     const path: string[] = ['M0 100'];
     let prev = [0, 100];
     let cur: number[] = [];
@@ -80,7 +81,8 @@ export class HeatMap extends Component {
     });
 
     path.push(`C ${(cur[0] - dx1).toFixed(1)} ${(cur[1] - dy1).toFixed(1)}, 1000 100, 1000 100`);
-    return path.join(' ');
+    this.pathEl.setAttributeNS(null, 'd', path.join(' '));
+    if (flex) this.el.style.flex = flex;
   }
 
   private slope(a: number[], b: number[]) {

@@ -1,14 +1,14 @@
 import {
-  $, addDestroyable, addDestroyableListener, Rect, throttle, Drag, isNumber, isValidNumber, clamp, addClass, isString,
+  $, addDestroyable, addDestroyableListener, Rect, throttle, Drag, isNumber, isValidNumber, clamp, isString,
   EventEmitterComponent,
+  toggleClass,
 } from 'wblib';
 import { Chapter } from './chapter';
-import { getConfig, ProgressConfig } from './config';
 import { EVENT } from './constants';
 import { HeatMap } from './heat-map';
 import { Marker } from './marker';
 import { Thumbnail } from './thumbnail';
-import { ProgressEventType } from './types';
+import { ProgressEventType, ProgressConfig, RequiredConfig } from './types';
 
 export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   config: ProgressConfig;
@@ -45,27 +45,17 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
   constructor(container?: HTMLElement | DocumentFragment, config?: ProgressConfig) {
     super(container, '.ppbar');
-    this.config = getConfig(config);
-    const {
-      duration, live, dot, heatMap,
-    } = this.config;
+    this.config = { ...config };
+    const { duration, live } = this.config;
     this.updateDuration(duration);
-    this.updateLive(live);
+    this.live = live!;
 
     this.heatEl = this.el.appendChild($('.ppbar_heat'));
     this.chapterEl = this.el.appendChild($('.ppbar_chapter'));
     this.markerEl = this.el.appendChild($('.ppbar_marker'));
     this.dotEl = this.el.appendChild($('.ppbar_dot'));
-    if (dot) {
-      if (isString(dot)) {
-        this.dotEl.innerHTML = dot;
-      } else {
-        this.dotEl.appendChild(dot);
-      }
-    } else {
-      this.dotEl.appendChild($('.ppbar_dot_i'));
-    }
-    if (heatMap?.hoverShow) addClass(this.heatEl, 'ppbar_heat-hover');
+    this.updateDot();
+    this.updateHoverClass();
 
     this.rect = addDestroyable(this, new Rect(this.el));
     addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
@@ -80,28 +70,47 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.setHeatMaps();
 
     this.thumbnail = addDestroyable(this, new Thumbnail(this.el, this));
-    this.thumbnail.updateOptions();
 
-    if (this.live) {
-      this.updatePlayed(this.duration);
-    }
+    if (this.live) this.updatePlayed(this.duration);
   }
 
   updateSize() {
     this.rect.update();
   }
 
-  updateLive(l?: boolean) {
-    this.live = l!;
-  }
-
   updateDuration(duration?: number) {
     this.duration = duration || 0;
     if (!isValidNumber(this.duration)) this.duration = 0;
+    if (this.duration) {
+      this.updateMarkerPosition(0);
+      this.chapters.forEach((c) => c.updateFlex(this.duration));
+      this.updateCurrentHeatMap();
+    }
+  }
+
+  updateConfig(config?: Partial<ProgressConfig>) {
+    if (!config) return;
+    Object.assign(this.config, config);
+    this.live = this.config.live!;
+    if (config.duration) this.duration = config.duration;
+    if (config.dot) this.updateDot();
+    if (config.chapters) this.updateChapters(config.chapters);
+    if (config.markers) this.updateMarkers();
+    if (config.heatMap) this.updateHeatMap(config.heatMap);
+    if (config.thumbnail) this.thumbnail.updateOptions(config.thumbnail);
+    if (this.live) this.updatePlayed(this.duration);
+    this.updateSize();
+  }
+
+  updateMarkerPosition(relativeTime: number) {
+    this.markers.forEach((m) => {
+      m.time += relativeTime;
+      m.update(this.duration);
+    });
   }
 
   updatePlayed(time: number, isDrag?: boolean) {
-    if (this.dragging && !isDrag) return;
+    if ((this.dragging && !isDrag) || !this.duration) return;
     this.chapters.forEach((c, i) => {
       if (c.updatePlayed(time)) this.curChapter = i;
     });
@@ -138,11 +147,24 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.thumbnail.update(time, left, this.rect.width);
   }
 
-  updateChapters(chapters?: ProgressConfig['chapters']) {
+  private updateDot() {
+    const { dot } = this.config;
+    if (dot) {
+      this.dotEl.innerHTML = '';
+      if (isString(dot)) {
+        this.dotEl.innerHTML = dot;
+      } else {
+        this.dotEl.appendChild(dot);
+      }
+    } else {
+      this.dotEl.appendChild($('.ppbar_dot_i'));
+    }
+  }
+
+  private updateChapters(chapters: RequiredConfig['chapters']) {
     const cLen = this.chapters.length;
-    if (!chapters && cLen < 2) return;
     const duration = this.duration;
-    if (chapters && chapters.length) {
+    if (chapters.length) {
       const maxLen = Math.max(chapters.length, cLen);
       let prev = 0;
       let old;
@@ -151,9 +173,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
         old = this.chapters[i];
         cur = chapters[i];
         if (old && cur) {
-          old.start = prev;
-          old.end = cur.time || duration;
-          old.updateFlex(duration);
+          old.update(prev, cur.time || duration, duration);
         } else if (old) {
           old.destroy();
           this.chapters[i] = undefined as any;
@@ -164,9 +184,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
       }
     } else {
       const c = this.chapters[0];
-      c.start = 0;
-      c.end = duration;
-      c.updateFlex(duration);
+      c.update(0, duration, duration);
       for (let i = 1; i < cLen; i++) {
         this.chapters[i].destroy();
         this.chapters[i] = undefined as any;
@@ -176,20 +194,64 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.chapters = this.chapters.filter(Boolean);
   }
 
-  updateMarkers(markers: ProgressConfig['markers']) {
-
+  private updateMarkers() {
+    this.markers.forEach((m) => m.destroy());
+    this.markers = [];
+    this.setMarkers();
   }
 
-  updateHeatMap(heatMap: ProgressConfig['heatMap']) {
-
+  private updateHoverClass() {
+    const { heatMap } = this.config;
+    if (heatMap) toggleClass(this.heatEl, '.ppbar_heat-hover', !!heatMap.hoverShow);
   }
 
-  updateThumbnail(thumb: ProgressConfig['thumbnail']) {
+  private updateHeatMap(heatMap: RequiredConfig['heatMap']) {
+    this.updateHoverClass();
+    const points = heatMap.points;
+    if (!points || !points.length) {
+      this.headMaps.forEach((x) => x.destroy());
+      this.headMaps = [];
+      return;
+    }
 
+    const ret = this.getHeatItems();
+    if (ret) {
+      const l = Math.max(this.headMaps.length, ret.items.length);
+      let old;
+      let cur;
+      for (let i = 0; i < l; i++) {
+        old = this.headMaps[i];
+        cur = ret.items[i];
+        if (old && cur) {
+          old.update(cur, ret.max, ret.flexes[i]);
+        } else if (old) {
+          old.destroy();
+          this.headMaps[i] = undefined as any;
+        } else {
+          this.headMaps[i] = new HeatMap(this.heatEl, cur, ret.max, ret.flexes[i]);
+        }
+      }
+    } else {
+      const l = Math.max(this.chapters.length, this.headMaps.length);
+      for (let i = 0; i < l; i++) {
+        if (!this.chapters[i]) {
+          this.headMaps[i].destroy();
+          this.headMaps[i] = undefined as any;
+        } else if (!this.headMaps[i]) {
+          this.headMaps[i] = new HeatMap(this.heatEl);
+        }
+      }
+    }
   }
 
-  updateMarkerPosition(relativeTime: number) {
-
+  private updateCurrentHeatMap() {
+    if (this.headMaps.length < 2) return;
+    const ret = this.getHeatItems();
+    if (ret) {
+      ret.items.forEach((x, i) => {
+        this.headMaps[i]?.update(x, ret.max, ret.flexes[i]);
+      });
+    }
   }
 
   private setChapters() {
@@ -215,7 +277,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
   private setMarkers() {
     const makers = this.config.markers;
-    if (makers && makers.length && this.duration) {
+    if (makers && makers.length) {
       makers.forEach((m, i) => {
         this.markers[i] = new Marker(this, this.markerEl, m);
       });
@@ -223,6 +285,28 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   }
 
   private setHeatMaps() {
+    const heatMap = this.config.heatMap;
+    if (!heatMap) return;
+    const pointLen = heatMap.points?.length;
+    if (!pointLen || pointLen < 2) return;
+    const duration = this.duration;
+
+    if (!duration) {
+      this.chapters.forEach((_, i) => {
+        this.headMaps[i] = new HeatMap(this.heatEl);
+      });
+      return;
+    }
+
+    const ret = this.getHeatItems();
+    if (ret) {
+      ret.items.forEach((x, i) => {
+        this.headMaps[i] = new HeatMap(this.heatEl, x, ret.max, ret.flexes[i]);
+      });
+    }
+  }
+
+  private getHeatItems() {
     const duration = this.duration;
     const heatMap = this.config.heatMap;
     if (!duration || !heatMap) return;
@@ -230,7 +314,8 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     const pointLen = points.length;
     if (!pointLen || pointLen < 2) return;
     const defaultDuration = heatMap?.defaultDuration as number;
-    const hasChapter = this.chapters.length > 1;
+    const chapters = this.chapters;
+    const hasChapter = chapters.length > 1;
     const items: number[][][] = [[]];
 
     let curChapter = 0;
@@ -252,12 +337,13 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
         point.duration = point.duration || defaultDuration;
       }
       if ((points[i] as any).duration == null) {
-        // console.error();
+        // eslint-disable-next-line no-console
+        console.error(`ppbar heatMap.points[${i}].duration is undefined`);
         return;
       }
       if (points[i].score > max) max = points[i].score;
 
-      curDuration = hasChapter ? this.chapters[curChapter].duration : duration;
+      curDuration = hasChapter ? chapters[curChapter].duration : duration;
 
       curLen = point.duration / curDuration * 1000;
       x = totalX + curLen / 2;
@@ -266,13 +352,13 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
       if (hasChapter) {
         total += point.duration;
         curItem = items[curChapter];
-        end = this.chapters[curChapter].end;
+        end = chapters[curChapter].end;
         if (total > end) {
-          if (this.chapters[curChapter + 1]) {
+          if (chapters[curChapter + 1]) {
             rDur = total - end;
             curItem.push([1000, point.score]);
             items[++curChapter] = [[0, point.score]];
-            totalX = rDur / this.chapters[curChapter].duration * 1000;
+            totalX = rDur / chapters[curChapter].duration * 1000;
           } else {
             curItem.push([1000, point.score]);
           }
@@ -283,9 +369,12 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
         items[0].push([x, point.score]);
       }
     }
-    items.forEach((item, i) => {
-      this.headMaps[i] = new HeatMap(this.heatEl, item, max, hasChapter ? this.chapters[i].el.style.flex : undefined);
-    });
+
+    return {
+      items,
+      flexes: items.map((_, i) => (hasChapter ? chapters[i].el.style.flex : undefined)),
+      max,
+    };
   }
 
   private onMousemove(ev: MouseEvent) {
@@ -311,7 +400,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
   private onDragStart = (ev: MouseEvent) => {
     this.dragging = true;
-    this.rect.update();
+    this.updateSize();
     this.onDragging(ev);
   };
 
