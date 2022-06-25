@@ -1,27 +1,10 @@
 const { DEFAULT_EXTENSIONS } = require('@babel/core')
 const { createBabelInputPluginFactory } = require('@rollup/plugin-babel');
 
-function tryRequire(name) {
-  try {
-    return require(name)
-  } catch (error) {
-    // ignore
-  }
-}
-
-const coreVersion = tryRequire('core-js/package.json')?.version || 3
-
 const plugin = createBabelInputPluginFactory(() => ({
-  options({ needPolyfills, exclude }) {
-    if (needPolyfills) {
-      exclude = exclude || []
-      exclude.push('node_modules/core-js/**')
-    }
-
+  options() {
     return {
-      customOptions: { needPolyfills },
       pluginOptions: {
-        exclude,
         extensions: [
           ...DEFAULT_EXTENSIONS,
           '.ts', '.tsx'
@@ -30,7 +13,7 @@ const plugin = createBabelInputPluginFactory(() => ({
       },
     };
   },
-  config(config, { customOptions: { needPolyfills } }) {
+  config(config) {
     if (config.hasFilesystemConfig()) {
       return config.options;
     }
@@ -45,13 +28,7 @@ const plugin = createBabelInputPluginFactory(() => ({
             modules: false,
             bugfixes: true,
             loose: false,
-            useBuiltIns: needPolyfills ? 'usage' : false,
-            corejs: needPolyfills
-              ? {
-                  version: coreVersion,
-                  proposals: false
-                }
-              : undefined,
+            useBuiltIns:  false,
             shippedProposals: true
           },
         ]
@@ -60,7 +37,7 @@ const plugin = createBabelInputPluginFactory(() => ({
   },
 }));
 
-module.exports = (c) => ({
-  ...plugin(c),
+module.exports = () => ({
+  ...plugin(),
   enforce: 'post',
 })
