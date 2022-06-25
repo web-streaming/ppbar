@@ -2,7 +2,7 @@
 
 best player progress bar
 
-![ppbar](./demo/p.png)
+[![ppbar](./demo/p.png)](https://web-streaming.github.io/ppbar/)
 
 ## Install
 
@@ -23,6 +23,3 @@ or
 ## Custom style
 
 ## API
-
-
-
