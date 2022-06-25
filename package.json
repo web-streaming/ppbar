@@ -19,6 +19,11 @@
     "dist",
     "lib"
   ],
+  "keywords": [
+    "player",
+    "progress",
+    "bar"
+  ],
   "license": "MIT",
   "scripts": {
     "dev": "vite demo",
