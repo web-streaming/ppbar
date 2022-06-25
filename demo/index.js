@@ -86,6 +86,10 @@ const bCfg = {
 
 const pb = new ProgressBar(p, cfg)
 
+setTimeout(function () {
+  pb.updateSize()
+}, 1000)
+
 pb.updateBuffer(6 * buffer.value)
 buffer.onchange = function() {
   pb.updateBuffer(6 * buffer.value)

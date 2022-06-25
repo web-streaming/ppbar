@@ -65,7 +65,10 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.rect = addDestroyable(this, new Rect(this.el));
     addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
       this.dragging = false;
-      if (isTouch) hide(this.thumbnail.el);
+      if (isTouch) {
+        if (this.config.heatMap?.hoverShow) this.heatEl.style.opacity = '0';
+        hide(this.thumbnail.el);
+      }
       this.emit(EVENT.DRAGEND, this.getCurrentTime(this.getLeft(ev)));
     }));
     addDestroyableListener(this, this.el, 'mousemove', throttle((ev: MouseEvent) => this.onMousemove(ev)), true);
@@ -115,10 +118,14 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     if (config.dot) this.updateDot();
     if (config.chapters) this.updateChapters(config.chapters);
     if (config.markers) this.updateMarkers();
-    if (config.heatMap) this.updateHeatMap(config.heatMap);
+    if (config.heatMap) {
+      this.heatEl.style.opacity = config.heatMap.hoverShow ? '0' : '1';
+      this.updateHeatMap(config.heatMap);
+    }
     if (config.thumbnail != null) this.thumbnail.updateOptions(config.thumbnail);
     if (this.live) this.updatePlayed(this.duration);
     if (config.rotate != null) this.rotate = config.rotate;
+
     this.updateSize();
   }
 
@@ -421,7 +428,12 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   private onDragStart = (ev: MouseEvent) => {
     this.dragging = true;
     this.updateSize();
-    if (isTouch) this.thumbnail.el.style.display = 'block';
+    if (isTouch) {
+      if (this.config.heatMap?.hoverShow) {
+        this.heatEl.style.opacity = '1';
+      }
+      this.thumbnail.el.style.display = 'block';
+    }
     this.onDragging(ev);
   };
 
