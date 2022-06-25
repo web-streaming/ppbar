@@ -8,7 +8,7 @@ import ViteLegacy from '@vitejs/plugin-legacy'
 const type = process.env.BUILD_TYPE
 
 if (type === 'demo') {
-  fs.rmSync('./demo/dist', { recursive: true, force: true })
+  fs.rmSync('./docs', { recursive: true, force: true })
 } else {
   fs.rmSync('./lib', { recursive: true, force: true })
   if (type !== 'es') {
@@ -30,7 +30,7 @@ export default defineConfig(({ command }) => {
           minify: 'terser',
           sourcemap: true,
           target: 'es2015',
-          outDir: path.resolve(__dirname, 'demo/dist'),
+          outDir: path.resolve(__dirname, 'docs'),
           rollupOptions: {
             input: path.resolve(__dirname, './demo/index.html')
           }

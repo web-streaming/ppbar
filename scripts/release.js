@@ -46,6 +46,7 @@ async function main() {
   fs.writeFileSync(path.resolve(__dirname, '../package.json'), JSON.stringify(pkg, null, 2))
 
   info('\nBuilding all packages...')
+  run('yarn', ['build:demo'])
   run('yarn', ['build'])
 
   info('\nPublishing packages...')
