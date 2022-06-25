@@ -126,6 +126,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     if (this.live) this.updatePlayed(this.duration);
     if (config.rotate != null) this.rotate = config.rotate;
 
+    this.dotEl.style.transform = 'translateY(-50%)';
     this.updateSize();
   }
 

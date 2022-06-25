@@ -3103,10 +3103,10 @@ vite@^2.9.12:
   optionalDependencies:
     fsevents "~2.3.2"
 
-wblib@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/wblib/-/wblib-1.0.5.tgz#3475bfa645cd8b29defccf5f7dd52bd58c0209bc"
-  integrity sha512-zfAOQ73AOBRutYuQNvK248T3j4pCg92C6vN8PW0+rdHBQ8cBP+gYSIDL4xDWoNQVU3Bqarb3AbiW3XpPj5A5gQ==
+wblib@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/wblib/-/wblib-1.0.6.tgz#1fdc120539c6a25a69760858c137469cdb8008a5"
+  integrity sha512-OHEuPjxY9aYRo81yKRpWKMK856issPB44fAhVbVk+wPhOUfeaFzJFN+wT+OkRwq8RJK5RbbKb2o10eaWl1qldw==
 
 which-boxed-primitive@^1.0.2:
   version "1.0.2"
