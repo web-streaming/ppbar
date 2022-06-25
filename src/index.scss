@@ -16,8 +16,6 @@ $heatMapHeight: 40px !default;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 
-
-
   @media not all and (hover: none) {
     &:hover &_chapter_i_w {
       transform: scaleY(1.5);
@@ -36,7 +34,7 @@ $heatMapHeight: 40px !default;
     }
   
     &:hover &_heat-hover {
-      opacity: 1;
+      opacity: 1 !important;
     }
 
     &:hover &_thumb {

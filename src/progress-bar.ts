@@ -171,7 +171,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     });
     if (!isTouch && gt1 && !matched) this.dotEl.style.transform = 'translateY(-50%)';
     if (left == null) left = time / this.duration * this.getWidth();
-    this.thumbnail.update(time, left, this.getWidth());
+    return this.thumbnail.update(time, left, this.getWidth());
   }
 
   private updateDot() {
@@ -287,7 +287,6 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
     if (chapters && chapters.length) {
       duration = chapters[chapters.length - 1].time || duration;
-      if (!duration) return;
       const frag = document.createDocumentFragment();
 
       let prev = 0;

@@ -35,6 +35,10 @@ export class Chapter extends Component {
   }
 
   updateFlex(duration: number) {
+    if (this.end <= this.start) {
+      this.end = duration;
+      this.duration = this.end - this.start;
+    }
     this.el.style.flex = String(Math.max(0, this.duration / duration));
   }
 

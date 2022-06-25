@@ -31,8 +31,11 @@ npm i ppbar
 
 ## 使用
 
+使用 ppbar，需要导入 `ProgressBar` 类和 ppbar 的样式。
+
 ```js
 import ProgressBar from 'ppbar';
+import 'ppbar/dist/index.min.css';
 
 const div = document.createElement('div');
 const bar = new ProgressBar(div, {
@@ -42,57 +45,362 @@ const bar = new ProgressBar(div, {
 document.body.appendChild(div)
 ```
 
+`ProgressBar` 构造函数接收两个参数，第一个它的容器，第二个是 ppbar 的参数。如果设置第一个参数会自动将 ppbar 的 DOM 元素添加到传入容器中。
+
+当然希望手动添加 ppbar 的 DOM 元素，可以不传入第一个参数。
+
+```ts
+import ProgressBar from 'ppbar';
+import 'ppbar/dist/index.min.css';
+
+const bar = new ProgressBar(undefined, {
+  // 参数
+})
+
+document.body.appendChild(bar.el)
+```
+
+ppbar 有一个 `updateConfig` 方法，可以随时通过它来动态更新参数。
+
+```ts
+import ProgressBar from 'ppbar';
+import 'ppbar/dist/index.min.css';
+
+const bar = new ProgressBar(undefined, {
+  // 参数
+})
+
+document.body.appendChild(bar.el)
+
+bar.updateConfig({ /* 新参数 */ })
+
+// 如果不需要 bar 对象了请销毁它
+bar.destroy()
+```
+
 ### 章节
+
+章节可以设置进度条分段效果，每个章节必须有一个标题，鼠标 hover 进度条时会被展示出来。
+
+章节应该有个 `time` 属性，表示该章节的结尾，最后一个章节可以省略 `time` 属性。
+
+```js
+import ProgressBar from 'ppbar';
+import 'ppbar/dist/index.min.css';
+
+new ProgressBar(document.body, {
+  chapters: [
+    { time: 10, title: 'chapter1' },
+    { time: 20, title: 'chapter2' },
+    { title: 'chapter3' },
+  ]
+})
+```
+
+上面一共设置 3 个章节，分别是：
+
+1. `0s - 10s` chapter1
+2. `10s - 20s` chapter2
+3. `20s - duration` chapter3
 
 ### 标记
 
+该功能允许你在进度条上设置标记点，每个标记点可以放入自定义的 DOM 或一张图片。
+
+```ts
+import ProgressBar from 'ppbar';
+import 'ppbar/dist/index.min.css';
+
+new ProgressBar(document.body, {
+  markers: [
+    { time: 10, title: 'marker1', image: './img.jpg', size: [30, 30] },
+  ]
+})
+```
+
+上面代码在进度条 10 秒位置，设置了一个标记点，标记点中有一个图片，它的大小是 `30x30`。
+
+除了图片还可以使用自定义的 dom 元素。
+
+```ts
+import ProgressBar from 'ppbar';
+import 'ppbar/dist/index.min.css';
+
+const div = document.createElement('div')
+
+new ProgressBar(document.body, {
+  markers: [
+    { time: 10, title: 'marker1', el: div },
+  ]
+})
+```
+
+当标记点被点击时会触发 `markerClick` 事件。
+
+```ts
+import { EVENT, ProgressBar } from 'ppbar'
+
+const bar = new ProgressBar(document.body, {
+  markers: [
+    { time: 10, title: 'marker1' },
+  ]
+})
+
+bar.on(EVENT.MARKER_CLICK, (marker) => console.log(marker))
+```
+
 ### 热力图
+
+热力图用于标记整个视频不同时间段观看量的变化。比如 0 到 5 秒观看量是 100，5 到 10 秒观看量是 200 ... 然后将这些观看量绘制成曲线就是 ppbar 的热力图了。
+
+```ts
+const bar = new ProgressBar(document.body, {
+  heatMap: {
+    points: [1, 2, 3],
+    defaultDuration： 5,
+  }
+})
+```
+
+上面代码配置表示，每个点表示的时长为 `5` 秒，也就是 `0 - 5` 的值是 `1`，`5 - 10` 为 `2`，`10 - 15` 为 `3`。
+
+另外还支持给每个点单独设置时长。
+
+```ts
+const bar = new ProgressBar(document.body, {
+  heatMap: {
+    points: [{ duration: 10, score: 1 }, { score: 2 }, { duration: 2, score: 3 }],
+    defaultDuration： 5,
+  }
+})
+```
+
+上面配置中，第一个和第三个有自己的时长，第二个则是使用 `defaultDuration`。 
+
+如果希望热力图和 youtube 一样，只有 hover 的时候才显示，可以设置 `hoverShow`。
+
+```ts
+const bar = new ProgressBar(document.body, {
+  heatMap: {
+    points: [1, 2, 3],
+    defaultDuration： 5,
+    hoverShow: true
+  }
+})
+```
 
 ### 缩略图
 
+缩略图用于预览视频的不同时间点的画面。一张缩略图由多张小缩略图拼接而成。
+
+```ts
+const bar = new ProgressBar(document.body, {
+  thumbnail: {
+    start: 0, // 缩略图开始时间，单位秒
+    gap: 10, // 单个小缩略图表示的时长
+    row: 5, // 大缩略图是又几行小缩略图组成
+    col: 5, // 大缩略图是又几列小缩略图组成
+    width: 160, // 单个小缩略图宽度
+    height: 90, // 单个小缩略图的高度
+    images: [], // 缩略图地址数组
+  }
+})
+```
+
+以上参数的值都是默认参数。
+
+另外如果你不希望展示缩略图可以将它设置为 `false`。
+
+```ts
+const bar = new ProgressBar(document.body, {
+  thumbnail: false
+})
+```
+
 ### 直播
+
+ppbar 还支持直播时移，在直播模式下进度条的时间展示将会是负数。
+
+```ts
+new ProgressBar(document.body, { live: true })
+```
+
+另外还可以使用 `updateConfig` 方法动态开启关闭直播模式。
+
+```ts
+const bar = new Progress(document.body) 
+
+bar.updateConfig({ live: true })
+```
 
 ### 旋转
 
+ppbar 还支持被旋转，例如在移动端不使用全屏，但是希望视频横着播放，这是就会对播放器设置 `transform: rotate(90deg)`。这时候就需要手动更新 ppbar 的旋转来防止 ppbar 交互失效。
+
+```ts
+const div = document.createElement('div')
+div.style.transform = 'rotate(90deg)'
+new ProgressBar(div, { rotate: 90 })
+```
+
+你还可以通过 `updateRotate` 方法来动态更新参数。
+
+```ts
+const bar = new ProgressBar(document.body)
+
+bar.updateRotate(90)
+```
+
 ### 事件
+
+ppbar 还会抛出事件，你可以使用 `on` 方法监听事件，`once` 方法监听一次事件，`off` 取消监听事件。
+
+```ts
+import { EVENT, ProgressBar } from 'ppbar'
+
+const bar = new ProgressBar(document.body)
+
+bar.once(EVENT.DRAGGING, console.log)
+bar.on(EVENT.DRAGEND, console.log)
+bar.off(EVENT.DRAGEND, console.log)
+```
+
+具体的事件描述请查看 [API 事件章节](#api)
 
 ## 自定义样式
 
+```scss
+
+```
+
+
 ## 集成到播放器
+
+你可以使用 ppbar 打造自己的播放器，或者将它集成到现成的播放器中，下面以 [nplayer](https://github.com/woopen/nplayer) 为例。
+
 
 
 ## API
 
-## 配置
+### 配置
 
 | 参数名 | 类型 | 描述 |
 | -- | -- | -- |
 | `live` | `boolean` | 是否是直播模式 |
-| `duration` | `number` | 是否是直播模式 |
-| `rotate` | `0 | 90 | -90` | 是否是直播模式 |
-| `dot` | `HTMLElement | string | true` | 是否是直播模式 |
-| `chapters` | `{time?: number,title: string }[]` | 章节 |
-| `heatMap` | `Object` | 是否是直播模式 |
-| `heatMap.points` | `Object` | 是否是直播模式 |
-| `heatMap.defaultDuration` | `Object` | 是否是直播模式 |
-| `heatMap.hoverShow` | `Object` | 是否是直播模式 |
-| `markers` | `Object[]` | 是否是直播模式 |
+| `duration` | `number` | 进度条的时长 |
+| `rotate` | `0 \| 90 \| -90` | 进度条要被旋转的度数 |
+| `dot` | `HTMLElement \| string \| true` | 进度条标记点，`true` 表示使用默认 |
+| `chapters` | `{time?:number,title:string}[]` | 章节，`time` 是一个章节的结束时间，最后一个章节可以不设置 |
+| `heatMap` | `Object` | 热力图 |
+| `heatMap.points` | `(number\|{duration?:number;score:number})[]` | 热力图分数点 |
+| `heatMap.defaultDuration` | `Object` | 默认单点时长 |
+| `heatMap.hoverShow` | `Object` | 是否要 hover 的时候才展示 |
+| `markers` | `Object[]` | 标记数组 |
 | `markers[].time` | `number` | 必填，标记对应的时间点 |
-| `markers[].title` | `string` | 是否是直播模式 |
-| `markers[].image` | `string` | 是否是直播模式 |
-| `markers[].el` | `HTMLElement` | 是否是直播模式 |
-| `markers[].size` | `number[]` | 是否是直播模式 |
-| `thumbnail` | `Object` | 是否是直播模式 |
-| `thumbnail.start` | `number` | 是否是直播模式 |
-| `thumbnail.gap` | `number` | 是否是直播模式 |
-| `thumbnail.row` | `number` | 是否是直播模式 |
-| `thumbnail.col` | `number` | 是否是直播模式 |
-| `thumbnail.width` | `number` | 是否是直播模式 |
-| `thumbnail.height` | `number` | 是否是直播模式 |
-| `thumbnail.images` | `string[]` | 是否是直播模式 |
+| `markers[].title` | `string` | 标记点标题 |
+| `markers[].el` | `HTMLElement` | 标记点自定义 DOM 元素 |
+| `markers[].image` | `string` | 标记点图片 |
+| `markers[].size` | `number[]` | 标记点图片大小 |
+| `thumbnail` | `Object \| false` | 缩略图，`false` 为不展示 |
+| `thumbnail.start` | `number` | 缩略图开始时间，默认 `0` |
+| `thumbnail.gap` | `number` | 每个缩略图的时长，默认 `10` |
+| `thumbnail.row` | `number` | 雪碧图由几行图片组成，默认 `5` |
+| `thumbnail.col` | `number` | 雪碧图由几列图片组成，默认 `5` |
+| `thumbnail.width` | `number` | 缩略图宽度，默认 `160` |
+| `thumbnail.height` | `number` | 缩略图高度，默认 `90` |
+| `thumbnail.images` | `string[]` | 缩略图地址数组 |
 
-## 属性
+### 属性
 
-## 方法
+| 属性 | 类型 | 描述 |
+| -- | -- | -- |
+| `el` | `HTMLElement` | 进度条的 DOM 元素 |
+| `config` | `ProgressConfig` | 进度条参数 |
+| `rect` | `Rect` | 进度条盒子大小，类似 [DOMRect](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect) |
+| `duration` | `number` | 时长，默认 `0` |
+| `rotate` | `number` | 被旋转的角度，默认 `0` |
+| `live` | `boolean` | 是否是直播模式 |
+
+### 方法
+
+#### updateSize()
+
+更新进度条大小，一般在修改容器大小位置时调用，防止进度条中元素对不齐。
+
+```ts
+updateSize(): void;
+```
+
+### updateRotate()
+
+更新进度条旋转角度。
+
+```ts
+updateRotate(r: 0 | 90 | -90): void
+```
+
+### updateDuration()
+
+更新时长
+
+```ts
+updateDuration(duration?: number): void
+```
+
+### updateConfig()
+
+更新进度条参数，参数可以部分更新，一般在切换视频时使用。
+
+```ts
+updateConfig(config?: Partial<ProgressConfig>): void
+```
+
+### updateMarkerPosition()
+
+更新标记点的位置，在直播中随着时间推移可以标记点位置会发生变化，可以使用该函数。参数是相对时间，表示所有标记点都移动多少时间距离。
+
+```ts
+updateMarkerPosition(relativeTime: number): void
+```
+
+### updatePlayed()
+
+更新播放进度。
+
+```ts
+updatePlayed(time: number): void
+```
+
+### updateBuffer()
+
+更新缓存进度。
+
+```ts
+updateBuffer(time: number): void
+```
+
+### updateHover()
+
+更新 hover 进度。
+
+```ts
+updateHover(time: number): void
+```
+
+### destroy()
+
+销毁进度条。
+
+```ts
+destroy(): void
+```
 
 ### 事件
+
+| 事件名 | 描述 |
+| -- | -- |
+| `markerClick` | 标记点被点击，参数是标记点对象 | 
+| `dragging` | 正在拖动进度条，频繁触发 |
+| `dragend` | 拖动结束 |
+| `mousemove` | 鼠标在进度条上移动，频繁触发 |
+| `mouseleave` | 鼠标离开 |
