@@ -177,7 +177,7 @@ const bar = new ProgressBar(document.body, {
 
 上面配置中，第一个和第三个有自己的时长，第二个则是使用 `defaultDuration`。 
 
-如果希望热力图和 youtube 一样，只有 hover 的时候才显示，可以设置 `hoverShow`。
+如果希望热力图和 Youtube 一样，只有 hover 的时候才显示，可以设置 `hoverShow`。
 
 ```ts
 const bar = new ProgressBar(document.body, {
@@ -269,16 +269,128 @@ bar.off(EVENT.DRAGEND, console.log)
 
 ## 自定义样式
 
-```scss
+ppbar 支持自定义修改样式。
 
+```scss
+new ProgressBar(document.body, {
+  dot: '<svg>...</svg>'
+})
 ```
+
+参数 `dot` 可以自定进度条原点，可以是自定义 DOM 元素、字符串，为字符串时将直接设置 `innerHTML`。
+
+另外还可以通过 CSS 变量来设置 ppbar 的主题色。
+
+```ts
+const bar = new ProgressBar(document.body) 
+
+bar.el.style.setProperty('--primary-color', 'rgba(35,173,229, 1)');
+```
+
+`--primary-color` 是 ppbar 的主题色，默认为 `#f00`。
+
+最后你还可以通过 Sass 变量来自定义样式。
+
+```scss
+@use '~ppbar/lib/index.scss' with (
+  $primaryColor: #0f0,
+  $markerDotBg: #f00,
+  $heatMapHeight: 30px
+)
+```
+
+在 scss 文件中导入并覆盖样式。
+
+```ts
+import ProgressBar from 'ppbar'
+import './index.scss'
+```
+
+导入上面自定义的样式。
+
+目前一共支持 3 种自定义 sass 变量。
+
+- `$primaryColor` 进度条的主题色，默认 `#f00`
+- `$markerDotBg` 标记点的背景色，默认 `#fff`
+- `$heatMapHeight` 热力图高度，默认 `40px`
 
 
 ## 集成到播放器
 
 你可以使用 ppbar 打造自己的播放器，或者将它集成到现成的播放器中，下面以 [nplayer](https://github.com/woopen/nplayer) 为例。
 
+```ts
+import ProgressBar, { EVENT as BAR_EVENT } from 'ppbar';
+import Player, { EVENT } from 'nplayer';
+import 'ppbar/dist/index.min.css'
 
+const div = document.createElement('div')
+div.style.width = '100%'
+const progress = new ProgressBar(div, {
+  chapters: [
+    { time: 10, title: 'chapter-a' },
+    { time: 28, title: 'chapter-b' },
+    { time: 51, title: 'chapter-c' },
+    { title: 'chapter-d' },
+  ],
+  markers: [{
+    time: 15,
+    title: 'title1',
+    image: 'https://github.com/web-streaming/ppbar/blob/main/demo/m1.png?raw=true',
+    size: [32, 34],
+  }, {
+    time: 30,
+    title: 'title2',
+    image: 'https://github.com/web-streaming/ppbar/blob/main/demo/m2.png?raw=true',
+    size: [32, 34],
+  },
+  {
+    time: 55, 
+    title: 'title3', 
+    image: 'https://github.com/web-streaming/ppbar/blob/main/demo/m3.png?raw=true', 
+    size: [32, 34],
+  }],
+  heatMap: {
+    points: [9592,9692,10063,41138,30485,23905,10966.5,10316.5,8533.5,7249,7181,6813,5929,18046.5,8817,3684.5],
+    defaultDuration: 3.75
+  },
+  thumbnail: {
+    images: ['https://github.com/woopen/nplayer/blob/main/website/static/img/M1.jpg?raw=true']
+  }
+})
+
+const MyProgress = {
+  el: div,
+  init(player) {
+    player.on(EVENT.DURATION_CHANGE, () => progress.updateDuration(player.duration))
+    player.on(EVENT.TIME_UPDATE, () => progress.updatePlayed(player.currentTime))
+    player.on(EVENT.PROGRESS, () => progress.updateBuffer(player.buffered.end(player.buffered.length - 1)))
+    // 监听播放器事件，关联到 ppbar
+  }
+}
+
+const player = new Player({
+  src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
+  controls: [
+    ['play', 'volume', 'time', 'spacer', 'settings', 'web-fullscreen', 'fullscreen'],
+    [MyProgress]
+  ]
+})
+
+progress.on(BAR_EVENT.DRAGEND, (time) => {
+  player.currentTime = time
+})
+progress.on(BAR_EVENT.MARKER_CLICK, (marker) => {
+  player.currentTime = marker.time
+})
+// 将 ppbar 事件关联到 player
+
+player.mount(document.body)
+```
+
+效果如下。
+
+![](./demo/c.png)
 
 ## API
 

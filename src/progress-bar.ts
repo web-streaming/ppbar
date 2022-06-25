@@ -164,7 +164,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
         c.realEl.style.transform = 'scaleY(2.5)';
         this.prevActiveChapter = c.realEl;
         if (this.curChapter === i) {
-          this.dotEl.style.transform = 'scale(1.2) translateY(-50%)';
+          this.dotEl.style.transform = 'scale(1.5) translateY(-50%)';
           matched = true;
         }
       }
