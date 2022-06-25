@@ -16,29 +16,46 @@ $heatMapHeight: 40px !default;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 
-  &:hover &_chapter_i_w {
-    transform: scaleY(1.5);
+
+
+  @media not all and (hover: none) {
+    &:hover &_chapter_i_w {
+      transform: scaleY(1.5);
+    }
+  
+    &:hover &_chapter_i_h {
+      opacity: 1;
+    }
+  
+    &:hover &_marker_i_d {
+      transform: scale(2.5) translate(-50%, -50%);
+    }
+  
+    &:hover &_heat {
+      transform: translateY(-0.85px);
+    }
+  
+    &:hover &_heat-hover {
+      opacity: 1;
+    }
+
+    &:hover &_thumb {
+      display: block;
+    }
+
+    &_dot {
+      opacity: 0;
+      &_i {
+        width: 15px;
+        height: 15px;
+      }
+    }
+
+    &:hover &_dot {
+      opacity: 1;
+    }
   }
 
-  &:hover &_chapter_i_h {
-    opacity: 1;
-  }
-
-  &:hover &_marker_i_d {
-    transform: scale(2.5) translate(-50%, -50%);
-  }
-
-  &:hover &_heat {
-    transform: translateY(-0.85px);
-  }
-
-  &:hover &_heat-hover {
-    opacity: 1;
-  }
-
-  &:hover &_thumb {
-    display: block;
-  }
 
   &_chapter {
     display: flex;
@@ -185,19 +202,6 @@ $heatMapHeight: 40px !default;
       border-radius: 50%;
       background: $primaryColor;
       background: var(--primary-color);
-    }
-  }
-
-  @media not all and (hover: none) {
-    &_dot {
-      opacity: 0;
-      &_i {
-        width: 15px;
-        height: 15px;
-      }
-    }
-    &:hover &_dot {
-      opacity: 1;
     }
   }
 

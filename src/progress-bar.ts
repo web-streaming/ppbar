@@ -2,6 +2,8 @@ import {
   $, addDestroyable, addDestroyableListener, Rect, throttle, Drag, isNumber, isValidNumber, clamp, isString,
   EventEmitterComponent,
   toggleClass,
+  isTouch,
+  hide,
 } from 'wblib';
 import { Chapter } from './chapter';
 import { EVENT } from './constants';
@@ -63,6 +65,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.rect = addDestroyable(this, new Rect(this.el));
     addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
       this.dragging = false;
+      if (isTouch) hide(this.thumbnail.el);
       this.emit(EVENT.DRAGEND, this.getCurrentTime(this.getLeft(ev)));
     }));
     addDestroyableListener(this, this.el, 'mousemove', throttle((ev: MouseEvent) => this.onMousemove(ev)), true);
@@ -81,6 +84,8 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
       ro.observe(this.el);
       addDestroyable(this, { destroy: () => ro.disconnect() });
     }
+
+    this.updateSize();
   }
 
   updateSize() {
@@ -111,7 +116,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     if (config.chapters) this.updateChapters(config.chapters);
     if (config.markers) this.updateMarkers();
     if (config.heatMap) this.updateHeatMap(config.heatMap);
-    if (config.thumbnail) this.thumbnail.updateOptions(config.thumbnail);
+    if (config.thumbnail != null) this.thumbnail.updateOptions(config.thumbnail);
     if (this.live) this.updatePlayed(this.duration);
     if (config.rotate != null) this.rotate = config.rotate;
     this.updateSize();
@@ -141,7 +146,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     let matched = false;
     const gt1 = this.chapters.length > 1;
     this.chapters.forEach((c, i) => {
-      if (c.updateHover(time) && gt1) {
+      if (c.updateHover(time) && !isTouch && gt1) {
         const h = this.headMaps[i];
         if (h) {
           if (this.prevActiveHeat) this.prevActiveHeat.style.transform = '';
@@ -157,7 +162,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
         }
       }
     });
-    if (gt1 && !matched) this.dotEl.style.transform = 'translateY(-50%)';
+    if (!isTouch && gt1 && !matched) this.dotEl.style.transform = 'translateY(-50%)';
     if (left == null) left = time / this.duration * this.getWidth();
     this.thumbnail.update(time, left, this.getWidth());
   }
@@ -416,6 +421,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   private onDragStart = (ev: MouseEvent) => {
     this.dragging = true;
     this.updateSize();
+    if (isTouch) this.thumbnail.el.style.display = 'block';
     this.onDragging(ev);
   };
 

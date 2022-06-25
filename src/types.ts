@@ -27,7 +27,7 @@ export interface ProgressConfig {
     width?: number;
     height?: number;
     images?: string[];
-  }
+  } | false;
 }
 
 export type RequiredConfig = Required<ProgressConfig>;

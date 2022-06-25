@@ -2,10 +2,10 @@ import {
   Component, formatTime, clamp, Rect, $, addDestroyable,
 } from 'wblib';
 import { ProgressBar } from './progress-bar';
-import { ProgressConfig, RequiredConfig } from './types';
+import { ProgressConfig } from './types';
 
 export class Thumbnail extends Component {
-  private opts: Required<RequiredConfig['thumbnail']> = {
+  private opts = {
     start: 0,
     gap: 10,
     col: 5,
@@ -42,6 +42,11 @@ export class Thumbnail extends Component {
   }
 
   updateOptions(cfg: ProgressConfig['thumbnail']) {
+    if (cfg === false) {
+      this.el.style.opacity = '0';
+      return;
+    }
+    this.el.style.opacity = '1';
     const opts = Object.assign(this.opts, cfg);
 
     if (opts.images.length) {
