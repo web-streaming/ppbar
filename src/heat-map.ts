@@ -82,7 +82,7 @@ export class HeatMap extends Component {
 
     path.push(`C ${(cur[0] - dx1).toFixed(1)} ${(cur[1] - dy1).toFixed(1)}, 1000 100, 1000 100`);
     this.pathEl.setAttributeNS(null, 'd', path.join(' '));
-    if (flex) this.el.style.flex = flex;
+    this.el.style.flex = flex || '1';
   }
 
   private slope(a: number[], b: number[]) {

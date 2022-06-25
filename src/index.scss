@@ -1,13 +1,23 @@
+$primaryColor: #f00 !default;
+$progressBg: rgba(255, 255, 255, .2) !default;
+$hoverBg: rgba(255, 255, 255, .2) !default;
+$bufferBg: rgba(255, 255, 255, .2) !default;
+$markerDotBg: #fff !default;
+$heatMapHeight: 40px !default;
+
 .ppbar {
+  --primary-color: #{$primaryColor};
+
   position: relative;
   width: 100%;
   touch-action: none;
   color: #fff;
   cursor: pointer;
+  user-select: none;
   -webkit-tap-highlight-color: transparent;
 
   &:hover &_chapter_i_w {
-    transform: scaleY(1.8);
+    transform: scaleY(1.5);
   }
 
   &:hover &_chapter_i_h {
@@ -19,15 +29,15 @@
   }
 
   &:hover &_heat {
-    transform: translateY(-1px);
+    transform: translateY(-0.85px);
   }
 
   &:hover &_heat-hover {
     opacity: 1;
   }
 
-  &:hover &_marker-hover {
-    opacity: 1;
+  &:hover &_thumb {
+    display: block;
   }
 
   &_chapter {
@@ -42,8 +52,8 @@
 
       &_w {
         position: relative;
-        height: 3px;
-        background: rgba(255, 255, 255, .2);
+        height: 4px;
+        background: $progressBg;
         transition: transform .12s ease;
         overflow: hidden;
 
@@ -54,20 +64,26 @@
         }
       }
 
-      &_p, &_h {
+      &_p, &_h, &_b {
         width: 100%;
         height: 100%;
         transform-origin: 0 0;
       }
 
       &_h {
-        background: rgba(255, 255, 255, .2);
+        background: $hoverBg;
         opacity: 0;
       }
 
       &_p {
         transform: scaleX(0);
-        background: red;
+        background: $primaryColor;
+        background: var(--primary-color);
+      }
+
+      &_b {
+        transform: scaleX(0);
+        background: $bufferBg;
       }
     }
   }
@@ -87,13 +103,13 @@
       &_d {
         position: absolute;
         left: 50%;
-        bottom: -10.5px;
-        width: 3px;
-        height: 3px;
+        bottom: -12.2px;
+        width: 4px;
+        height: 4px;
         border-radius: 50%;
         transform: translate(-50%, -50%);
         transition: transform .12s ease;
-        background: #fff;
+        background: $markerDotBg;
         transform-origin: 0 0;
         pointer-events: none;
       }
@@ -129,10 +145,10 @@
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 9px;
+    bottom: 10px;
     display: flex;
     gap: 2px;
-    height: 40px;
+    height: $heatMapHeight;
     transition: transform .2s ease, opacity .12s ease;
 
     &-hover {
@@ -157,6 +173,7 @@
     pointer-events: none;
     transition: opacity .2s ease, transform .2s ease;
     transform-origin: 0 0;
+    z-index: 1;
 
     > :first-child {
       transform: translate(-50%);
@@ -166,7 +183,8 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: red;
+      background: $primaryColor;
+      background: var(--primary-color);
     }
   }
 
@@ -184,6 +202,7 @@
   }
 
   &_thumb {
+    display: none;
     position: absolute;
     left: 0;
     bottom: 30px;

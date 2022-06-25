@@ -3,7 +3,8 @@ import { EVENT } from './constants';
 export interface ProgressConfig {
   live?: boolean;
   duration?: number;
-  dot?: HTMLElement | string;
+  rotate?: 0 | 90 | -90;
+  dot?: HTMLElement | string | true;
   chapters?: { time?: number, title: string }[];
   heatMap?: {
     points: (number | { duration?: number; score: number })[];

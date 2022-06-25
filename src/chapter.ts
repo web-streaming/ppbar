@@ -23,13 +23,14 @@ export class Chapter extends Component {
     this.bufferedEl = wrapEl.appendChild($('.ppbar_chapter_i_b'));
     this.hoverEl = wrapEl.appendChild($('.ppbar_chapter_i_h'));
     this.playedEl = wrapEl.appendChild($('.ppbar_chapter_i_p'));
-    this.update(start, end, duration);
+    this.update(start, end, duration, title);
   }
 
-  update(start: number, end: number, duration: number) {
+  update(start: number, end: number, duration: number, title?: string) {
     this.start = start;
     this.end = end;
     this.duration = end - start;
+    this.title = title || '';
     this.updateFlex(duration);
   }
 

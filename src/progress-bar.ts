@@ -17,6 +17,8 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
   duration = 0;
 
+  rotate = 0;
+
   live = false;
 
   chapters: Chapter[] = [];
@@ -46,7 +48,8 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   constructor(container?: HTMLElement | DocumentFragment, config?: ProgressConfig) {
     super(container, '.ppbar');
     this.config = { ...config };
-    const { duration, live } = this.config;
+    const { duration, live, rotate } = this.config;
+    this.rotate = rotate || 0;
     this.updateDuration(duration);
     this.live = live!;
 
@@ -60,7 +63,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.rect = addDestroyable(this, new Rect(this.el));
     addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
       this.dragging = false;
-      this.emit(EVENT.DRAGEND, this.getCurrentTime(ev.clientX - this.rect.x));
+      this.emit(EVENT.DRAGEND, this.getCurrentTime(this.getLeft(ev)));
     }));
     addDestroyableListener(this, this.el, 'mousemove', throttle((ev: MouseEvent) => this.onMousemove(ev)), true);
     addDestroyableListener(this, this.el, 'mouseleave', throttle(this.onMouseleave), false);
@@ -72,10 +75,21 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.thumbnail = addDestroyable(this, new Thumbnail(this.el, this));
 
     if (this.live) this.updatePlayed(this.duration);
+
+    if ((window as any).ResizeObserver) {
+      const ro = new ResizeObserver(throttle(() => this.updateSize()));
+      ro.observe(this.el);
+      addDestroyable(this, { destroy: () => ro.disconnect() });
+    }
   }
 
   updateSize() {
     this.rect.update();
+  }
+
+  updateRotate(r: RequiredConfig['rotate']) {
+    this.rotate = r;
+    setTimeout(() => this.updateSize());
   }
 
   updateDuration(duration?: number) {
@@ -99,6 +113,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     if (config.heatMap) this.updateHeatMap(config.heatMap);
     if (config.thumbnail) this.thumbnail.updateOptions(config.thumbnail);
     if (this.live) this.updatePlayed(this.duration);
+    if (config.rotate != null) this.rotate = config.rotate;
     this.updateSize();
   }
 
@@ -130,11 +145,11 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
         const h = this.headMaps[i];
         if (h) {
           if (this.prevActiveHeat) this.prevActiveHeat.style.transform = '';
-          h.el.style.transform = 'translateY(-1.5px)';
+          h.el.style.transform = 'translateY(-2px)';
           this.prevActiveHeat = h.el;
         }
         if (this.prevActiveChapter) this.prevActiveChapter.style.transform = '';
-        c.realEl.style.transform = 'scaleY(2.8)';
+        c.realEl.style.transform = 'scaleY(2.5)';
         this.prevActiveChapter = c.realEl;
         if (this.curChapter === i) {
           this.dotEl.style.transform = 'scale(1.2) translateY(-50%)';
@@ -143,14 +158,14 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
       }
     });
     if (gt1 && !matched) this.dotEl.style.transform = 'translateY(-50%)';
-    if (left == null) left = time / this.duration * this.rect.width;
-    this.thumbnail.update(time, left, this.rect.width);
+    if (left == null) left = time / this.duration * this.getWidth();
+    this.thumbnail.update(time, left, this.getWidth());
   }
 
   private updateDot() {
     const { dot } = this.config;
-    if (dot) {
-      this.dotEl.innerHTML = '';
+    this.dotEl.innerHTML = '';
+    if (dot && dot !== true) {
       if (isString(dot)) {
         this.dotEl.innerHTML = dot;
       } else {
@@ -173,7 +188,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
         old = this.chapters[i];
         cur = chapters[i];
         if (old && cur) {
-          old.update(prev, cur.time || duration, duration);
+          old.update(prev, cur.time || duration, duration, cur.title);
         } else if (old) {
           old.destroy();
           this.chapters[i] = undefined as any;
@@ -202,7 +217,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
   private updateHoverClass() {
     const { heatMap } = this.config;
-    if (heatMap) toggleClass(this.heatEl, '.ppbar_heat-hover', !!heatMap.hoverShow);
+    if (heatMap) toggleClass(this.heatEl, 'ppbar_heat-hover', !!heatMap.hoverShow);
   }
 
   private updateHeatMap(heatMap: RequiredConfig['heatMap']) {
@@ -378,7 +393,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   }
 
   private onMousemove(ev: MouseEvent) {
-    const l = ev.clientX - this.rect.x;
+    const l = this.getLeft(ev);
     const t = this.getCurrentTime(l);
     this.updateHover(t, l);
     this.emit(EVENT.MOUSEMOVE, t);
@@ -405,7 +420,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   };
 
   private onDragging = (ev: MouseEvent) => {
-    const l = ev.clientX - this.rect.x;
+    const l = this.getLeft(ev);
     const t = this.getCurrentTime(l);
     this.updatePlayed(t, true);
     this.updateHover(t, l);
@@ -413,6 +428,21 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
   };
 
   private getCurrentTime(left: number): number {
-    return clamp((left / this.rect.width)) * this.duration;
+    return clamp((left / this.getWidth())) * this.duration;
   }
+
+  private getLeft(ev: MouseEvent) {
+    if (!this.rotate) return ev.clientX - this.rect.x;
+    if (this.rotate === 90) return ev.clientY - this.rect.y;
+    return this.rect.bottom - ev.clientY;
+  }
+
+  private getWidth() {
+    if (this.rotate) return this.rect.height;
+    return this.rect.width;
+  }
+}
+
+export function createBar(container?: HTMLElement | DocumentFragment, config?: ProgressConfig) {
+  return new ProgressBar(container, config);
 }

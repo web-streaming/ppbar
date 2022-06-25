@@ -105,3 +105,5 @@ lib/
 
 # TernJS port file
 .tern-port
+
+!demo/dist
