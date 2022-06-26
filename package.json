@@ -1,6 +1,6 @@
 {
   "name": "ppbar",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "dist/index.js",
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -55,6 +55,6 @@
     "vite": "^2.9.12"
   },
   "dependencies": {
-    "wblib": "^1.0.6"
+    "wblib": "^1.0.7"
   }
 }
