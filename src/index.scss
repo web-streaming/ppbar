@@ -13,7 +13,9 @@ $heatMapHeight: 40px !default;
   touch-action: none;
   color: #fff;
   cursor: pointer;
+  -ms-user-select:none;
   user-select: none;
+  -webkit-touch-callout:none;
   -webkit-tap-highlight-color: transparent;
 
   @media not all and (hover: none) {
