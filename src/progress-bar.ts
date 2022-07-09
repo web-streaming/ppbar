@@ -4,6 +4,7 @@ import {
   toggleClass,
   isTouch,
   hide,
+  DragEvent,
 } from 'wblib';
 import { Chapter } from './chapter';
 import { EVENT } from './constants';
@@ -49,7 +50,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
   constructor(container?: HTMLElement | DocumentFragment, config?: ProgressConfig) {
     super(container, '.ppbar');
-    this.config = { ...config };
+    this.config = Object.assign({}, config);
     const { duration, live, rotate } = this.config;
     this.rotate = rotate || 0;
     this.updateDuration(duration);
@@ -63,7 +64,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.updateHoverClass();
 
     this.rect = addDestroyable(this, new Rect(this.el));
-    addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
+    addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: DragEvent) => {
       this.dragging = false;
       if (isTouch) {
         if (this.config.heatMap?.hoverShow) this.heatEl.style.opacity = '0';
@@ -425,7 +426,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     });
   };
 
-  private onDragStart = (ev: MouseEvent) => {
+  private onDragStart = (ev: DragEvent) => {
     this.dragging = true;
     this.updateSize();
     if (isTouch) {
@@ -437,7 +438,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.onDragging(ev);
   };
 
-  private onDragging = (ev: MouseEvent) => {
+  private onDragging = (ev: DragEvent) => {
     const l = this.getLeft(ev);
     const t = this.getCurrentTime(l);
     this.updatePlayed(t, true);
@@ -449,7 +450,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     return clamp((left / this.getWidth())) * this.duration;
   }
 
-  private getLeft(ev: MouseEvent) {
+  private getLeft(ev: DragEvent) {
     if (!this.rotate) return ev.clientX - this.rect.x;
     if (this.rotate === 90) return ev.clientY - this.rect.y;
     return this.rect.bottom - ev.clientY;
