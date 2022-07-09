@@ -4,7 +4,6 @@ import {
   toggleClass,
   isTouch,
   hide,
-  DragEvent,
 } from 'wblib';
 import { Chapter } from './chapter';
 import { EVENT } from './constants';
@@ -64,7 +63,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.updateHoverClass();
 
     this.rect = addDestroyable(this, new Rect(this.el));
-    addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: DragEvent) => {
+    addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
       this.dragging = false;
       if (isTouch) {
         if (this.config.heatMap?.hoverShow) this.heatEl.style.opacity = '0';
@@ -426,7 +425,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     });
   };
 
-  private onDragStart = (ev: DragEvent) => {
+  private onDragStart = (ev: MouseEvent) => {
     this.dragging = true;
     this.updateSize();
     if (isTouch) {
@@ -438,7 +437,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     this.onDragging(ev);
   };
 
-  private onDragging = (ev: DragEvent) => {
+  private onDragging = (ev: MouseEvent) => {
     const l = this.getLeft(ev);
     const t = this.getCurrentTime(l);
     this.updatePlayed(t, true);
@@ -450,7 +449,7 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     return clamp((left / this.getWidth())) * this.duration;
   }
 
-  private getLeft(ev: DragEvent) {
+  private getLeft(ev: MouseEvent) {
     if (!this.rotate) return ev.clientX - this.rect.x;
     if (this.rotate === 90) return ev.clientY - this.rect.y;
     return this.rect.bottom - ev.clientY;
