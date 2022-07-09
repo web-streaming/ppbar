@@ -80,7 +80,7 @@ export class Thumbnail extends Component {
     if (markers.length) {
       for (let i = 0, l = markers.length, item; i < l; i++) {
         item = markers[i];
-        if (time >= item.time && time < (item.time + 2)) {
+        if (time >= item.time && time <= (item.time + 1)) {
           title = item.title;
           break;
         }
