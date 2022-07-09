@@ -438,7 +438,7 @@ Update the size of the progress bar, which is generally called when modifying th
 updateSize(): void;
 ```
 
-### updateRotate()
+#### updateRotate()
 
 Update the rotation degree of the progress bar.
 
@@ -446,7 +446,7 @@ Update the rotation degree of the progress bar.
 updateRotate(r: 0 | 90 | -90): void
 ```
 
-### updateDuration()
+#### updateDuration()
 
 update duration.
 
@@ -454,7 +454,7 @@ update duration.
 updateDuration(duration?: number): void
 ```
 
-### updateConfig()
+#### updateConfig()
 
 Update the config of the progress bar. The config can be partially updated and are generally used when switching videos.
 
@@ -462,7 +462,7 @@ Update the config of the progress bar. The config can be partially updated and a
 updateConfig(config?: Partial<ProgressConfig>): void
 ```
 
-### updateMarkerPosition()
+#### updateMarkerPosition()
 
 To update the position of the marker, it can be changed over time during the live broadcast, you can use this function. The parameter is a relative time, indicating how much time distance all markers move.
 
@@ -470,7 +470,7 @@ To update the position of the marker, it can be changed over time during the liv
 updateMarkerPosition(relativeTime: number): void
 ```
 
-### updatePlayed()
+#### updatePlayed()
 
 Update playback progress.
 
@@ -478,7 +478,7 @@ Update playback progress.
 updatePlayed(time: number): void
 ```
 
-### updateBuffer()
+#### updateBuffer()
 
 Update buffer progress.
 
@@ -486,7 +486,7 @@ Update buffer progress.
 updateBuffer(time: number): void
 ```
 
-### updateHover()
+#### updateHover()
 
 Update hover progress.
 
@@ -494,7 +494,7 @@ Update hover progress.
 updateHover(time: number): void
 ```
 
-### destroy()
+#### destroy()
 
 Destroy the progress bar.
 

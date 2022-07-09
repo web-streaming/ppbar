@@ -443,7 +443,7 @@ player.mount(document.body)
 updateSize(): void;
 ```
 
-### updateRotate()
+#### updateRotate()
 
 更新进度条旋转角度。
 
@@ -451,7 +451,7 @@ updateSize(): void;
 updateRotate(r: 0 | 90 | -90): void
 ```
 
-### updateDuration()
+#### updateDuration()
 
 更新时长
 
@@ -459,7 +459,7 @@ updateRotate(r: 0 | 90 | -90): void
 updateDuration(duration?: number): void
 ```
 
-### updateConfig()
+#### updateConfig()
 
 更新进度条参数，参数可以部分更新，一般在切换视频时使用。
 
@@ -467,7 +467,7 @@ updateDuration(duration?: number): void
 updateConfig(config?: Partial<ProgressConfig>): void
 ```
 
-### updateMarkerPosition()
+#### updateMarkerPosition()
 
 更新标记点的位置，在直播中随着时间推移可以标记点位置会发生变化，可以使用该函数。参数是相对时间，表示所有标记点都移动多少时间距离。
 
@@ -475,7 +475,7 @@ updateConfig(config?: Partial<ProgressConfig>): void
 updateMarkerPosition(relativeTime: number): void
 ```
 
-### updatePlayed()
+#### updatePlayed()
 
 更新播放进度。
 
@@ -483,7 +483,7 @@ updateMarkerPosition(relativeTime: number): void
 updatePlayed(time: number): void
 ```
 
-### updateBuffer()
+#### updateBuffer()
 
 更新缓存进度。
 
@@ -491,7 +491,7 @@ updatePlayed(time: number): void
 updateBuffer(time: number): void
 ```
 
-### updateHover()
+#### updateHover()
 
 更新 hover 进度。
 
@@ -499,7 +499,7 @@ updateBuffer(time: number): void
 updateHover(time: number): void
 ```
 
-### destroy()
+#### destroy()
 
 销毁进度条。
 
