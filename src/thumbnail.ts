@@ -106,7 +106,7 @@ export class Thumbnail extends Component {
     const url = this.opts.images[(i / this.thumbImgPrePic!) | 0];
     if (!url) return;
     const x = (i % this.opts.col) * this.opts.width;
-    const y = ~~((i % this.thumbImgPrePic!) / this.opts.row) * this.opts.height;
+    const y = ~~((i % this.thumbImgPrePic!) / this.opts.col) * this.opts.height;
     return { url, x, y };
   }
 }
