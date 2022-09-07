@@ -31,6 +31,10 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
 
   thumbnail: Thumbnail;
 
+  private currentTime = 0;
+
+  private bufTime = 0;
+
   private curChapter = 0;
 
   private prevActiveHeat?: HTMLElement;
@@ -51,18 +55,20 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     super(container, '.ppbar');
     this.config = Object.assign({}, config);
     const { duration, live, rotate } = this.config;
+    this.duration = duration || 0;
     this.rotate = rotate || 0;
-    this.updateDuration(duration);
     this.live = live!;
 
     this.heatEl = this.el.appendChild($('.ppbar_heat'));
     this.chapterEl = this.el.appendChild($('.ppbar_chapter'));
     this.markerEl = this.el.appendChild($('.ppbar_marker'));
     this.dotEl = this.el.appendChild($('.ppbar_dot'));
+
     this.updateDot();
     this.updateHoverClass();
 
     this.rect = addDestroyable(this, new Rect(this.el));
+
     addDestroyable(this, new Drag(this.chapterEl, this.onDragStart, this.onDragging, (ev: MouseEvent) => {
       this.dragging = false;
       if (isTouch) {
@@ -105,8 +111,10 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     if (!isValidNumber(this.duration)) this.duration = 0;
     if (this.duration) {
       this.updateMarkerPosition(0);
-      this.chapters.forEach((c) => c.updateFlex(this.duration));
+      this.updateChapters(this.config.chapters);
       this.updateCurrentHeatMap();
+      this.updatePlayed(this.currentTime);
+      this.updateBuffer(this.bufTime);
     }
   }
 
@@ -143,10 +151,12 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
       if (c.updatePlayed(time)) this.curChapter = i;
     });
 
-    this.dotEl.style.left = `${time / this.duration * 100}%`;
+    this.currentTime = time;
+    this.dotEl.style.left = `${this.currentTime / this.duration * 100}%`;
   }
 
   updateBuffer(time: number) {
+    this.bufTime = time;
     this.chapters.forEach((c) => c.updateBuffer(time));
   }
 
@@ -189,10 +199,10 @@ export class ProgressBar extends EventEmitterComponent<ProgressEventType> {
     }
   }
 
-  private updateChapters(chapters: RequiredConfig['chapters']) {
+  private updateChapters(chapters: ProgressConfig['chapters']) {
     const cLen = this.chapters.length;
     const duration = this.duration;
-    if (chapters.length) {
+    if (chapters && chapters.length) {
       const maxLen = Math.max(chapters.length, cLen);
       let prev = 0;
       let old;
