@@ -2936,10 +2936,10 @@ vite@^3.0.3:
   optionalDependencies:
     fsevents "~2.3.2"
 
-wblib@^1.0.10:
-  version "1.0.10"
-  resolved "https://registry.npmmirror.com/wblib/-/wblib-1.0.10.tgz#aac442141af06f27f447e108e95ca3ba85300ae2"
-  integrity sha512-hRhuAzouHO1EA9X8++lFboDrgrdqfJBpQw7qr4I1ffV3Ju/lFosZfgA4rLVq4J9ZcCEEYpnHgxJSp/DcbGxQ7g==
+wblib@^1.0.12:
+  version "1.0.12"
+  resolved "https://registry.npmjs.org/wblib/-/wblib-1.0.12.tgz#d66ccd828b5acb169e5f2f397115e65e6b33029d"
+  integrity sha512-XdfJU2Fojs0FJAK/JXPpmGGiKhQ+1R9PH6fPkcACFegGb5VgQIdJSP9yWflSIab4a2oslYHNdqux/MaGQTLjdw==
 
 which-boxed-primitive@^1.0.2:
   version "1.0.2"
