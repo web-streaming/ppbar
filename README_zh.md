@@ -5,8 +5,6 @@
 
 功能强大的播放器进度条，支持章节、标记、热力图、缩略图、直播、旋转等功能。还支持自定义 UI，可以将它打造成 Youtube 或 B站的播放器进度条的外观。
 
-如果你觉得 PPBar 还不错，欢迎给它点一个 Star⭐️，来鼓励作者。
-
 [![ppbar](./demo/p.png)](https://web-streaming.github.io/ppbar/)
 
 [English](./README.md)

@@ -5,8 +5,6 @@
 
 A powerful player progress bar that supports chapters, markers, heatmaps, thumbnails, live broadcasts, rotations, and more. It also supports custom UI, which can be made into the appearance of the player progress bar of Youtube or Bilibili.
 
-If you like PPBar, please give it a Star⭐️ to encourage the author.
-
 [![ppbar](./demo/p.png)](https://web-streaming.github.io/ppbar/)
 
 [中文文档](./README_zh.md)
